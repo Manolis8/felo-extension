@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unclawned</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --panel: color-mix(in oklab, canvas 92%, canvasText 8%);
+            --border: color-mix(in oklab, canvasText 18%, transparent);
+            --muted: color-mix(in oklab, canvasText 60%, transparent);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+
+        body {
+            margin: 0;
+            background: canvas;
+            color: canvasText;
+        }
+
+        .wrap {
+            max-width: 560px;
+            margin: 40px auto;
+            padding: 0 24px 60px;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 4px;
+        }
+
+        .sub {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 0 0 28px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+
+        .card h2 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: canvas;
+            color: canvasText;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 14px;
+        }
+
+        input:focus {
+            border-color: canvasText;
+        }
+
+        button {
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: none;
+            background: canvasText;
+            color: canvas;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .status {
+            margin-top: 12px;
+            font-size: 13px;
+            min-height: 18px;
+        }
+
+        .status.ok {
+            color: #16a34a;
+        }
+
+        .status.error {
+            color: #dc2626;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        ol {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>Unclawned</h1>
+
+        <div class="card">
+            <h2>How to use</h2>
+            <ol></ol>
+                <li>Go to unclawned.com and type a task — Unclawned will run it in your browser</li>
+            </ol>
+        </div>
+    </div>
+    <script type="module" src="options.js"></script>
+</body>
+
+</html>

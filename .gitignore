@@ -1,0 +1,13 @@
+# Secrets: never commit these
+.env
+.env.*
+
+# Local tool settings
+.claude/
+
+# Old debug dumps
+export.txt
+full-export.json
+felo-extension-contents.json
+output.txt
+*.log

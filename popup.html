@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unclawned</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --panel: color-mix(in oklab, canvas 92%, canvasText 8%);
+            --border: color-mix(in oklab, canvasText 18%, transparent);
+            --muted: color-mix(in oklab, canvasText 60%, transparent);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+
+        body {
+            margin: 0;
+            background: canvas;
+            color: canvasText;
+            width: 280px;
+            padding: 16px;
+        }
+
+        h1 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 12px;
+        }
+
+        .status {
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .status.ok {
+            color: #16a34a;
+        }
+
+        button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: canvasText;
+            color: canvas;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Unclawned</h1>
+    <div class="status" id="status">Loading...</div>
+    <button id="connect">Sign In with Unclawned</button>
+    <button id="disconnect" style="display: none;">Disconnect</button>
+    <p class="hint">Click to sign in, then run tasks from unclawned.com</p>
+    <script src="popup.js"></script>
+</body>
+
+</html>
