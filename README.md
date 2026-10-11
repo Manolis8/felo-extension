@@ -10,10 +10,9 @@ This Chrome extension lets the [Unclawned CLI](https://github.com/Manolis8/uncla
 Unclawned CLI  ◄── WebSocket (localhost) ──►  this extension  ──►  your Chrome tabs
 ```
 
-- The extension opens a WebSocket to `<server URL>/extension?token=<token>`.
-- **Default server URL is `ws://localhost:3011`**, which is the CLI's MCP bridge mode (`node bin/mcp-bridge.js`).
-- For the normal interactive CLI (`npm start`), which listens on **`ws://localhost:3001`**, open the extension's **Options**, paste a token starting with `felo_` (for example `felo_local_dev`) and click **Save**. That switches it to port 3001.
-- On localhost any `felo_` token works; the CLI registers it on first connect.
+- The extension opens a WebSocket to `<CLI address>/extension`.
+- **Default address is `ws://localhost:3001`**, the normal interactive CLI (`npm start`). It connects automatically.
+- For MCP bridge mode (`node bin/mcp-bridge.js`, port 3011) or a custom `CLI_PORT`, right-click the extension icon → **Options**, change the address, and click **Save and reconnect**.
 - The extension uses Chrome's `debugger` permission to drive tabs, so Chrome shows a "started debugging this browser" bar while it's in use. That's expected.
 
 ## Install
@@ -29,7 +28,7 @@ Unclawned CLI  ◄── WebSocket (localhost) ──►  this extension  ──
 
 - Start the CLI, then click the extension icon. The popup shows **Connected** or **Disconnected**; click **Connect** if it's disconnected.
 - The badge shows `…` while connecting, `ON` on a tab the agent is controlling, and `!` on an error.
-- If it stays disconnected, check the port in Options matches the CLI (`3001` by default, or whatever `CLI_PORT` is set to).
+- If it stays disconnected, check the address in Options matches the CLI (`ws://localhost:3001` by default).
 
 ## Files
 
@@ -40,13 +39,12 @@ background-utils.js   reconnect/backoff helpers
 content.js            page bridge
 extension/            scripts injected into pages (recording, bridge)
 popup.html/.js        toolbar popup (status)
-options.html/.js      settings page (token / server)
+options.html/.js      settings page (CLI address)
 icons/
 ```
 
 ## Known problems
 
-- The default port (3011) and the CLI's default port (3001) don't match, so you have to set it in Options.
 - Reconnection after Chrome sleeps or the CLI restarts is not always reliable; reload the extension if it gets stuck.
 - Some text in the UI still mentions `unclawned.com`, which was a planned hosted version and isn't needed for local use.
 

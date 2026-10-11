@@ -123,9 +123,20 @@
         <h1>Unclawned</h1>
 
         <div class="card">
+            <h2>Connection</h2>
+            <label for="server-url">CLI address</label>
+            <input id="server-url" type="text" placeholder="ws://localhost:3001" spellcheck="false" />
+            <button id="save">Save and reconnect</button>
+            <div id="status" class="status"></div>
+            <p class="hint">Normal CLI (<code>npm start</code>): ws://localhost:3001. MCP bridge mode: ws://localhost:3011.</p>
+        </div>
+
+        <div class="card">
             <h2>How to use</h2>
-            <ol></ol>
-                <li>Go to unclawned.com and type a task — Unclawned will run it in your browser</li>
+            <ol>
+                <li>Start the Unclawned CLI in a terminal (<code>npm start</code>)</li>
+                <li>Click the extension icon and check it says Connected</li>
+                <li>Type a task in the CLI. It runs in this browser</li>
             </ol>
         </div>
     </div>

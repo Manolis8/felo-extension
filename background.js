@@ -1,6 +1,7 @@
 import { buildUnclawnedWsUrl, isRetryableReconnectError, reconnectDelayMs } from './background-utils.js'
 
-const SERVER_URL = 'ws://localhost:3011'
+// Default: the Unclawned CLI. MCP bridge mode uses ws://localhost:3011 (set it in Options).
+const SERVER_URL = 'ws://localhost:3001'
 const TOKEN_PREFIX = 'felo_'
 const TOKEN_MIN_LENGTH = 10 // felo_ prefix (4) + minimum characters (6)
 
@@ -1177,9 +1178,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 })
 
-// Force correct server URL on every startup
-
-chrome.storage.local.set({ serverUrl: SERVER_URL })
+// Use the default server URL only if the user hasn't chosen one in Options
+chrome.storage.local.get(['serverUrl']).then((stored) => {
+  if (!stored.serverUrl) chrome.storage.local.set({ serverUrl: SERVER_URL })
+}).catch(() => {})
 
 // Rehydrate state on service worker startup. Split: rehydration is the gate
 // (fast), relay reconnect runs in background (slow, non-blocking).
