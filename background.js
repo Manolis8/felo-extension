@@ -2,6 +2,7 @@ import { buildUnclawnedWsUrl, isRetryableReconnectError, reconnectDelayMs } from
 
 // Default: the Unclawned CLI. MCP bridge mode uses ws://localhost:3011 (set it in Options).
 const SERVER_URL = 'ws://localhost:3001'
+const MCP_BRIDGE_URL = 'ws://localhost:3011'
 const TOKEN_PREFIX = 'felo_'
 const TOKEN_MIN_LENGTH = 10 // felo_ prefix (4) + minimum characters (6)
 
@@ -137,24 +138,50 @@ async function rehydrateState() {
   }
 }
 
+/** Address the relay actually connected to (may differ from the saved one). */
+let activeServerUrl = ''
+
+function toHttpBase(serverUrl) {
+  return serverUrl
+    .replace('wss://', 'https://')
+    .replace('ws://', 'http://')
+    .split('/extension')[0]
+}
+
+async function findReachableServer(savedUrl) {
+  const isLocal = savedUrl.includes('localhost') || savedUrl.includes('127.0.0.1')
+  const candidates = [savedUrl]
+  if (isLocal) {
+    for (const url of [SERVER_URL, MCP_BRIDGE_URL]) {
+      if (!candidates.includes(url)) candidates.push(url)
+    }
+  }
+  let lastErr = null
+  for (const url of candidates) {
+    try {
+      await fetch(`${toHttpBase(url)}/health`, { method: 'GET', signal: AbortSignal.timeout(3000) })
+      if (url !== savedUrl) console.log(`Saved address ${savedUrl} not reachable, using ${url}`)
+      return url
+    } catch (err) {
+      lastErr = err
+    }
+  }
+  throw new Error(`Unclawned server not reachable at ${candidates.join(' or ')} (${String(lastErr)})`)
+}
+
 async function ensureRelayConnection() {
   if (relayWs && relayWs.readyState === WebSocket.OPEN) return
   if (relayConnectPromise) return await relayConnectPromise
 
   relayConnectPromise = (async () => {
-    const { serverUrl, userToken } = await getConnectionSettings()
+    const settings = await getConnectionSettings()
+    const { userToken } = settings
+    // Fast preflight: is the Unclawned server up? Try the saved address first,
+    // then the other local default (CLI 3001 / MCP bridge 3011), so a saved
+    // port that doesn't match the running mode still connects.
+    const serverUrl = await findReachableServer(settings.serverUrl)
+    activeServerUrl = serverUrl
     const wsUrl = buildUnclawnedWsUrl(serverUrl, userToken)
-    const httpBase = serverUrl
-      .replace('wss://', 'https://')
-      .replace('ws://', 'http://')
-      .split('/extension')[0]
-
-    // Fast preflight: is the Unclawned server up?
-    try {
-      await fetch(`${httpBase}/health`, { method: 'GET', signal: AbortSignal.timeout(3000) })
-    } catch (err) {
-      throw new Error(`Unclawned server not reachable (${String(err)})`)
-    }
 
     const ws = new WebSocket(wsUrl)
     relayWs = ws
@@ -1272,7 +1299,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'get-relay-status') {
     const connected = relayWs ? relayWs.readyState === WebSocket.OPEN : false
     getConnectionSettings()
-      .then(({ serverUrl }) => sendResponse({ connected, serverUrl, lastError: connected ? '' : lastRelayError }))
+      .then(({ serverUrl }) => sendResponse({ connected, serverUrl: (connected && activeServerUrl) || serverUrl, lastError: connected ? '' : lastRelayError }))
       .catch((err) => sendResponse({ connected, serverUrl: '', lastError: err instanceof Error ? err.message : String(err) }))
     return true
   }
