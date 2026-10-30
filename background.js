@@ -150,12 +150,10 @@ function toHttpBase(serverUrl) {
 
 async function findReachableServer(savedUrl) {
   const isLocal = savedUrl.includes('localhost') || savedUrl.includes('127.0.0.1')
-  const candidates = [savedUrl]
-  if (isLocal) {
-    for (const url of [SERVER_URL, MCP_BRIDGE_URL]) {
-      if (!candidates.includes(url)) candidates.push(url)
-    }
-  }
+  // A running CLI always wins over a saved local address: an MCP bridge
+  // (often left running by another agent) would otherwise hold the extension
+  // and the CLI would never see it.
+  const candidates = [...new Set(isLocal ? [SERVER_URL, savedUrl, MCP_BRIDGE_URL] : [savedUrl])]
   let lastErr = null
   for (const url of candidates) {
     try {
@@ -1198,6 +1196,19 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   // Do NOT check reconnectTimer — that flag can be stale after the service
   // worker was suspended and the timer lost. The alarm is the authoritative
   // heartbeat: if disconnected and no live promise, try immediately.
+  // Connected to an MCP bridge but the CLI came up since: move to the CLI.
+  if (relayWs && relayWs.readyState === WebSocket.OPEN && activeServerUrl !== SERVER_URL && !relayConnectPromise) {
+    const cliUp = await fetch(`${toHttpBase(SERVER_URL)}/health`, { signal: AbortSignal.timeout(2000) })
+      .then((r) => r.ok, () => false)
+    if (cliUp) {
+      console.log(`Keepalive: CLI is up, switching from ${activeServerUrl} to ${SERVER_URL}`)
+      const old = relayWs
+      onRelayClosed('switching to CLI')
+      try { old.close(1000, 'Switching to CLI') } catch {}
+      return
+    }
+  }
+
   if (!relayWs || relayWs.readyState !== WebSocket.OPEN) {
     if (!relayConnectPromise) {
       cancelReconnect() // clear any stale timer
