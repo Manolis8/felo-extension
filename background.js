@@ -42,6 +42,8 @@ const reattachPending = new Set()
 
 // Reconnect state for exponential backoff.
 let reconnectAttempt = 0
+/** Last connection error, shown in the popup. */
+let lastRelayError = ''
 let reconnectTimer = null
 
 function nowStack() {
@@ -262,10 +264,12 @@ function scheduleReconnect() {
     try {
       await ensureRelayConnection()
       reconnectAttempt = 0
+      lastRelayError = ''
       console.log('Reconnected successfully')
       await reannounceAttachedTabs()
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
+      lastRelayError = message
       console.warn(`Reconnect attempt ${reconnectAttempt} failed: ${message}`)
       if (!isRetryableReconnectError(err)) {
         return
@@ -1178,14 +1182,34 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 })
 
-// Use the default server URL only if the user hasn't chosen one in Options
-chrome.storage.local.get(['serverUrl']).then((stored) => {
-  if (!stored.serverUrl) chrome.storage.local.set({ serverUrl: SERVER_URL })
-}).catch(() => {})
+// Older builds talked to the hosted Felo backend and saved its address (and a
+// felo_ token) in storage, which survives reloads and updates. The hosted
+// backend is gone, so move those installs to the local CLI once.
+const SETTINGS_VERSION = 2
+
+async function migrateSettings() {
+  try {
+    const stored = await chrome.storage.local.get(['serverUrl', 'settingsVersion'])
+    if ((stored.settingsVersion || 0) >= SETTINGS_VERSION) {
+      if (!stored.serverUrl) await chrome.storage.local.set({ serverUrl: SERVER_URL })
+      return
+    }
+    const url = String(stored.serverUrl || '')
+    const isLocal = url.includes('localhost') || url.includes('127.0.0.1')
+    if (!isLocal) {
+      if (url) console.log(`Replacing old server address ${url} with ${SERVER_URL}`)
+      await chrome.storage.local.set({ serverUrl: SERVER_URL })
+      await chrome.storage.local.remove('userToken')
+    }
+    await chrome.storage.local.set({ settingsVersion: SETTINGS_VERSION })
+  } catch {
+    // Storage errors fall back to the default address in getConnectionSettings.
+  }
+}
 
 // Rehydrate state on service worker startup. Split: rehydration is the gate
 // (fast), relay reconnect runs in background (slow, non-blocking).
-const initPromise = rehydrateState()
+const initPromise = migrateSettings().then(() => rehydrateState())
 
 initPromise.then(() => {
   ensureRelayConnection().then(async () => {
@@ -1239,12 +1263,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     cancelReconnect()
     ensureRelayConnection().then(() => {
       reconnectAttempt = 0
-    }).catch(() => {
+      lastRelayError = ''
+    }).catch((err) => {
+      lastRelayError = err instanceof Error ? err.message : String(err)
       scheduleReconnect()
     })
   }
   if (msg?.type === 'get-relay-status') {
-    sendResponse({ connected: relayWs ? relayWs.readyState === WebSocket.OPEN : false })
+    const connected = relayWs ? relayWs.readyState === WebSocket.OPEN : false
+    getConnectionSettings()
+      .then(({ serverUrl }) => sendResponse({ connected, serverUrl, lastError: connected ? '' : lastRelayError }))
+      .catch((err) => sendResponse({ connected, serverUrl: '', lastError: err instanceof Error ? err.message : String(err) }))
     return true
   }
   return false

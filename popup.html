@@ -34,6 +34,12 @@
             font-size: 13px;
         }
 
+        .detail {
+            text-align: left;
+            margin: -6px 0 12px;
+            word-break: break-word;
+        }
+
         .status.ok {
             color: #16a34a;
         }
@@ -66,9 +72,10 @@
 <body>
     <h1>Unclawned</h1>
     <div class="status" id="status">Loading...</div>
-    <button id="connect">Sign In with Unclawned</button>
+    <div class="hint detail" id="detail"></div>
+    <button id="connect">Connect</button>
     <button id="disconnect" style="display: none;">Disconnect</button>
-    <p class="hint">Click to sign in, then run tasks from unclawned.com</p>
+    <p class="hint">Start the Unclawned CLI (<code>npm start</code>), then click Connect. Change the address in Options.</p>
     <script src="popup.js"></script>
 </body>
 
