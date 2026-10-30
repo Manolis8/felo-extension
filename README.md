@@ -26,7 +26,8 @@ Unclawned CLI  ◄── WebSocket (localhost) ──►  this extension  ──
 
 ## Check that it works
 
-- Start the CLI, then click the extension icon. The popup shows **Connected** or **Disconnected**; click **Connect** if it's disconnected.
+- Start the CLI, then click the extension icon. The popup shows **Connected** or **Disconnected**, the address it's using, and the last connection error. Click **Connect** if it's disconnected.
+- Upgrading from the old hosted Felo version: version 0.1.6 replaces any saved non-local address (and the old `felo_` token) with `ws://localhost:3001` once, on the first start after you reload the extension.
 - The badge shows `…` while connecting, `ON` on a tab the agent is controlling, and `!` on an error.
 - If it stays disconnected, check the address in Options matches the CLI (`ws://localhost:3001` by default).
 

@@ -5,12 +5,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const connectBtn = document.getElementById('connect')
   const disconnectBtn = document.getElementById('disconnect')
 
+  const detailEl = document.getElementById('detail')
+
   async function updateStatus() {
     let connected = false
+    let serverUrl = ''
+    let lastError = ''
     try {
       const resp = await chrome.runtime.sendMessage({ type: 'get-relay-status' })
       connected = resp?.connected === true
+      serverUrl = resp?.serverUrl || ''
+      lastError = resp?.lastError || ''
     } catch {}
+
+    const lines = []
+    if (serverUrl) lines.push(`Address: ${serverUrl}`)
+    if (!connected && lastError) lines.push(`Last error: ${lastError}`)
+    detailEl.textContent = lines.join('\n')
+    detailEl.style.whiteSpace = 'pre-line'
 
     if (connected) {
       statusEl.textContent = 'Connected'
